@@ -320,7 +320,7 @@ export default function StudentRegistration() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="student-branch">الفرع / المركز</label>
+            <label className="form-label" htmlFor="student-branch">الفرع </label>
             <div className="select-wrapper">
               <select
                 id="student-branch"
@@ -329,19 +329,10 @@ export default function StudentRegistration() {
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
               >
-                <option value="" disabled>اختر الفرع أو المركز...</option>
-                <option value="توتال 1 أحمد ماهر">توتال 1 أحمد ماهر</option>
-                <option value="توتال 2 أحمد ماهر">توتال 2 أحمد ماهر</option>
-                <option value="فورجي أحمد ماهر">فورجي أحمد ماهر</option>
-                <option value="فورجي سامية الجمل">فورجي سامية الجمل</option>
-                <option value="ستارز سامية الجمل">ستارز سامية الجمل</option>
-                <option value="فورجي المشاية">فورجي المشاية</option>
-                <option value="كنترول توريل">كنترول توريل</option>
-                <option value="فورجي توريل">فورجي توريل</option>
-                <option value="ستارز توريل">ستارز توريل</option>
-                <option value="كارما توريل">كارما توريل</option>
-                <option value="النخبة الجلاء">النخبة الجلاء</option>
-                <option value="النخبة هيروز">النخبة هيروز</option>
+                <option value="" disabled>اختر الفرع ...</option>
+                <option value="فورجي الكاكولا">فورجي الكاكولا</option>
+                <option value="ستارز فرينش بيكر">ستارز فرينش بيكر</option>
+
               </select>
               <i className="fa-solid fa-location-dot input-icon"></i>
               <i className="fa-solid fa-chevron-down select-arrow"></i>

@@ -611,18 +611,9 @@ export default function StudentDashboard() {
                     value={editingStudent.branch}
                     onChange={(e) => setEditingStudent({ ...editingStudent, branch: e.target.value })}
                   >
-                    <option value="توتال 1 أحمد ماهر">توتال 1 أحمد ماهر</option>
-                    <option value="توتال 2 أحمد ماهر">توتال 2 أحمد ماهر</option>
-                    <option value="فورجي أحمد ماهر">فورجي أحمد ماهر</option>
-                    <option value="فورجي سامية الجمل">فورجي سامية الجمل</option>
-                    <option value="ستارز سامية الجمل">ستارز سامية الجمل</option>
-                    <option value="فورجي المشاية">فورجي المشاية</option>
-                    <option value="كنترول توريل">كنترول توريل</option>
-                    <option value="فورجي توريل">فورجي توريل</option>
-                    <option value="ستارز توريل">ستارز توريل</option>
-                    <option value="كارما توريل">كارما توريل</option>
-                    <option value="النخبة الجلاء">النخبة الجلاء</option>
-                    <option value="النخبة هيروز">النخبة هيروز</option>
+                    <option value="فورجي الكاكولا">فورجي الكاكولا</option>
+                    <option value="ستارز فرينش بيكر">ستارز فرينش بيكر</option>
+
                   </select>
                   <i className="fa-solid fa-chevron-down modal-select-arrow"></i>
                 </div>
