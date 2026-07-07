@@ -14,6 +14,7 @@ interface Student {
   school: string;
   parentJob: string;
   grade: string;
+  branch: string;
   track?: string;
   createdAt: string;
 }
@@ -240,6 +241,7 @@ export default function StudentDashboard() {
           parentJob: editingStudent.parentJob.trim(),
           grade: editingStudent.grade,
           track: editingStudent.track ?? "",
+          branch: editingStudent.branch ?? "",
         }),
       });
       const json = await res.json();
@@ -423,6 +425,7 @@ export default function StudentDashboard() {
                     <th>هاتف ولي الأمر</th>
                     <th>المدرسة</th>
                     <th>وظيفة ولي الأمر</th>
+                    <th>الفرع</th>
                     <th>الصف</th>
                     <th>المسار / الشعبة</th>
                     <th>الإجراءات</th>
@@ -438,6 +441,7 @@ export default function StudentDashboard() {
                       <td>{student.parentPhone}</td>
                       <td><div className="student-school">{student.school}</div></td>
                       <td>{student.parentJob}</td>
+                      <td>{student.branch}</td>
                       <td>{student.grade}</td>
                       <td>{student.track || "-"}</td>
                       <td>
@@ -598,6 +602,31 @@ export default function StudentDashboard() {
                   <i className="fa-solid fa-briefcase modal-input-icon"></i>
                 </div>
               </div>
+              <div className="modal-form-group">
+                <label className="modal-label">الفرع / المركز</label>
+                <div className="modal-select-wrapper">
+                  <select
+                    className="modal-select"
+                    required
+                    value={editingStudent.branch}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, branch: e.target.value })}
+                  >
+                    <option value="توتال 1 أحمد ماهر">توتال 1 أحمد ماهر</option>
+                    <option value="توتال 2 أحمد ماهر">توتال 2 أحمد ماهر</option>
+                    <option value="فورجي أحمد ماهر">فورجي أحمد ماهر</option>
+                    <option value="فورجي سامية الجمل">فورجي سامية الجمل</option>
+                    <option value="ستارز سامية الجمل">ستارز سامية الجمل</option>
+                    <option value="فورجي المشاية">فورجي المشاية</option>
+                    <option value="كنترول توريل">كنترول توريل</option>
+                    <option value="فورجي توريل">فورجي توريل</option>
+                    <option value="ستارز توريل">ستارز توريل</option>
+                    <option value="كارما توريل">كارما توريل</option>
+                    <option value="النخبة الجلاء">النخبة الجلاء</option>
+                    <option value="النخبة هيروز">النخبة هيروز</option>
+                  </select>
+                  <i className="fa-solid fa-chevron-down modal-select-arrow"></i>
+                </div>
+              </div>
               <div className="modal-row">
                 <div className="modal-form-group">
                   <label className="modal-label">الصف الدراسي</label>
@@ -745,6 +774,10 @@ export default function StudentDashboard() {
                   <span className="view-info-label">وظيفة ولي الأمر</span>
                   <span className="view-info-value">{viewingStudent.parentJob}</span>
                 </div>
+              </div>
+              <div className="view-info-content">
+                <span className="view-info-label">الفرع / المركز</span>
+                <span className="view-info-value">{viewingStudent.branch}</span>
               </div>
             </div>
             <button className="modal-close-full-btn" onClick={() => setShowViewModal(false)}>

@@ -2,7 +2,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import Student, { IStudent } from "@/lib/models/Student";
 
 import Counter from "@/lib/models/Counter";
-import { Grade } from "../constants/grades";
+import { Grade, Branch } from "../constants/grades";
 
 // ---------------------------------------------------------------------------
 // Universal student code generation — A0001 … A9999 → B0001 … B9999 → …
@@ -51,6 +51,7 @@ export interface CreateStudentDTO {
   gender: "ذكر" | "أنثى";
   grade: Grade;
   track: string; // "" for grades without a track
+  branch: Branch;
   studentPhone: string;
   parentPhone: string;
   school: string;

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createStudent } from "@/lib/services/studentService";
 import { validateStudentInput } from "@/lib/utils/validation";
 import { apiSuccess, apiError } from "@/lib/utils/response";
-import { Grade } from "@/lib/constants/grades";
+import { Branch, Grade } from "@/lib/constants/grades";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       track: body.track ? String(body.track).trim() : "",
       studentPhone: String(body.studentPhone).trim(),
       parentPhone: String(body.parentPhone).trim(),
+      branch: String(body.branch).trim() as Branch,
       school: String(body.school).trim(),
       parentJob: String(body.parentJob).trim(),
       createdBy: "student",

@@ -1,4 +1,4 @@
-import { ALL_GRADES, SECONDARY_2_TRACKS, SECONDARY_3_TRACKS } from "../constants/grades";
+import { ALL_BRANCHES, ALL_GRADES, SECONDARY_2_TRACKS, SECONDARY_3_TRACKS } from "../constants/grades";
 
 const EG_PHONE = /^01[0125]\d{8}$/;
 const QUADRUPLE_NAME = /^\S+(\s+\S+){3,}/;
@@ -7,6 +7,7 @@ const NAME_REGEX = /^[\p{L}\p{M}\s.'-]+$/u;
 const VALID_GRADES = new Set<string>(ALL_GRADES);
 const S2_TRACKS = new Set<string>(SECONDARY_2_TRACKS);
 const S3_TRACKS = new Set<string>(SECONDARY_3_TRACKS);
+const VALID_BRANCHES = new Set<string>(ALL_BRANCHES);
 
 export function validateStudentInput(body: Record<string, unknown>) {
   const errors: string[] = [];
@@ -65,6 +66,12 @@ export function validateStudentInput(body: Record<string, unknown>) {
   } else if (track) {
     // All other grades must NOT have a track
     errors.push("لا يوجد مسار أو شعبة لهذا الصف.");
+  }
+
+  // Branch — required, must be one of the defined branches
+  const branch = String(body.branch ?? "").trim();
+  if (!branch || !VALID_BRANCHES.has(branch)) {
+    errors.push("يرجى اختيار الفرع / المركز.");
   }
 
   return errors;

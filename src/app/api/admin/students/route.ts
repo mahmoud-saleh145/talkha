@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/middleware/auth";
 import { getStudents, createStudent, } from "@/lib/services/studentService";
 import { validateStudentInput } from "@/lib/utils/validation";
 import { apiSuccess, apiError } from "@/lib/utils/response";
-import { Grade } from "@/lib/constants/grades";
+import { Branch, Grade } from "@/lib/constants/grades";
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       parentPhone: String(body.parentPhone).trim(),
       school: String(body.school).trim(),
       parentJob: String(body.parentJob).trim(),
+      branch: String(body.branch).trim() as Branch,
       grade: String(body.grade).trim() as Grade,
       track: body.track ? String(body.track).trim() : "",
       createdBy: "student",

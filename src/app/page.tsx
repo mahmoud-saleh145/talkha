@@ -15,6 +15,8 @@ export default function StudentRegistration() {
   const [loading, setLoading] = useState(false);
   const [grade, setGrade] = useState("");
   const [track, setTrack] = useState("");
+  const [branch, setBranch] = useState("");
+
   // Popup state
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
@@ -111,6 +113,7 @@ export default function StudentRegistration() {
           parentJob: finalParentJob,
           grade,
           track,
+          branch,
         }),
       });
 
@@ -314,6 +317,34 @@ export default function StudentRegistration() {
                 onChange={(e) => setStudentSchool(e.target.value)}
               />
               <i className="fa-solid fa-school input-icon"></i>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="student-branch">الفرع / المركز</label>
+            <div className="select-wrapper">
+              <select
+                id="student-branch"
+                className="select-field"
+                required
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              >
+                <option value="" disabled>اختر الفرع أو المركز...</option>
+                <option value="توتال 1 أحمد ماهر">توتال 1 أحمد ماهر</option>
+                <option value="توتال 2 أحمد ماهر">توتال 2 أحمد ماهر</option>
+                <option value="فورجي أحمد ماهر">فورجي أحمد ماهر</option>
+                <option value="فورجي سامية الجمل">فورجي سامية الجمل</option>
+                <option value="ستارز سامية الجمل">ستارز سامية الجمل</option>
+                <option value="فورجي المشاية">فورجي المشاية</option>
+                <option value="كنترول توريل">كنترول توريل</option>
+                <option value="فورجي توريل">فورجي توريل</option>
+                <option value="ستارز توريل">ستارز توريل</option>
+                <option value="كارما توريل">كارما توريل</option>
+                <option value="النخبة الجلاء">النخبة الجلاء</option>
+                <option value="النخبة هيروز">النخبة هيروز</option>
+              </select>
+              <i className="fa-solid fa-location-dot input-icon"></i>
+              <i className="fa-solid fa-chevron-down select-arrow"></i>
             </div>
           </div>
 

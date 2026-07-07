@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
     console.log(students);
 
     const rows = students.map((s) => ({
+      "الفرع": s.branch,
       "وظيفه ولي الأمر": s.parentJob,
       مدرسه: s.school,
       " تليفون الطالب": s.studentPhone,
@@ -52,6 +53,7 @@ export async function GET(req: NextRequest) {
     (ws as any)["!rtl"] = true;
     // عرض الأعمدة
     ws["!cols"] = [
+      { wch: 18 }, // الفرع
       { wch: 18 }, // وظيفة ولي الأمر
       { wch: 15 }, // المدرسة
       { wch: 20 }, // هاتف الطالب

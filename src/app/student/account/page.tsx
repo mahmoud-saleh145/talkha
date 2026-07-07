@@ -12,6 +12,7 @@ interface StudentProfile {
   studentPhone: string;
   parentPhone: string;
   school: string;
+  branch: string;
   parentJob: string;
   createdAt: string;
 }
@@ -407,6 +408,19 @@ export default function StudentAccountPage() {
                       </span>
                       <span className="student-profile-info-value">
                         {student.parentJob}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="student-profile-info-row student-profile-info-row--full">
+                    <div className="student-profile-info-icon" style={{ backgroundColor: "#f0fdf4", color: "#16a34a" }}>
+                      <i className="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div className="student-profile-info-content">
+                      <span className="student-profile-info-label">
+                        الفرع / المركز
+                      </span>
+                      <span className="student-profile-info-value">
+                        {student.branch}
                       </span>
                     </div>
                   </div>

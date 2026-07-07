@@ -4,14 +4,11 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 // Grade constants — single source of truth
 // ---------------------------------------------------------------------------
 import {
+  ALL_BRANCHES,
   ALL_GRADES,
+  Branch,
   Grade,
 } from "@/lib/constants/grades";
-
-
-// ---------------------------------------------------------------------------
-// Track constants — only relevant for two specific grades
-// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // IStudent interface
@@ -26,6 +23,7 @@ export interface IStudent extends Document {
   parentPhone: string;
   school: string;
   parentJob: string;
+  branch: Branch;
   createdBy: "student" | "admin";
   ip: string;
   userAgent: string;
@@ -66,6 +64,12 @@ const studentSchema = new Schema<IStudent>(
       type: String,
       trim: true,
       default: "",
+    },
+    branch: {
+      type: String,
+      required: true,
+      trim: true,
+      enum: [...ALL_BRANCHES],
     },
     studentPhone: {
       type: String,

@@ -9,6 +9,7 @@ export async function proxy(req: NextRequest) {
         if (token) {
             const payload = await verifyToken(token);
 
+
             if (payload) {
                 return NextResponse.redirect(
                     new URL("/admin/dashboard", req.url)
