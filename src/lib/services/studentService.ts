@@ -77,9 +77,7 @@ export async function createStudent(dto: CreateStudentDTO): Promise<IStudent> {
 
   // Prevent duplicate registration by phone number
   const existing = await Student.findOne({
-    $or: [
-      { studentPhone: dto.studentPhone }
-    ],
+    studentPhone: dto.studentPhone
   });
 
   if (existing) {
