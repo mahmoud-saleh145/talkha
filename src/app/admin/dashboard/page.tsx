@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Pagination from "@/lib/utils/usePagination";
 
 interface Student {
   _id: string;
@@ -42,6 +43,7 @@ export default function StudentDashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
+  const [sort, setSort] = useState("-code");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -92,7 +94,7 @@ export default function StudentDashboard() {
     }, 3500);
   };
 
-  const fetchStudents = useCallback(async (page = 1, search = "", gender = "") => {
+  const fetchStudents = useCallback(async (page = 1, search = "", gender = "", sortValue = "code") => {
     setLoadingData(true);
     try {
       const params = new URLSearchParams({
@@ -100,6 +102,7 @@ export default function StudentDashboard() {
         limit: "20",
         search,
         gender: gender === "all" ? "" : gender,
+        sort: sortValue,
       });
       const res = await fetch(`/api/admin/students?${params}`);
       if (res.status === 401) { router.push("/admin"); return; }
@@ -131,17 +134,17 @@ export default function StudentDashboard() {
   useEffect(() => {
     const logged = sessionStorage.getItem("loggedAdmin");
     if (logged) setAdminUser(JSON.parse(logged));
-    fetchStudents(1, "", "all");
+    fetchStudents(1, "", "all", sort);
     fetchStats();
   }, [fetchStudents, fetchStats]);
 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchStudents(1, searchQuery, genderFilter);
+      fetchStudents(1, searchQuery, genderFilter, sort);
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery, genderFilter, fetchStudents]);
+  }, [searchQuery, genderFilter, fetchStudents, sort]);
 
   const handleLogout = async () => {
     showToast("جاري تسجيل الخروج...", "info");
@@ -204,7 +207,7 @@ export default function StudentDashboard() {
       const json = await res.json();
       if (!res.ok || !json.success) { showToast(json.message ?? "حدث خطأ.", "error"); return; }
       showToast(`تم حذف الطالب "${student.name}" بنجاح`, "error");
-      fetchStudents(currentPage, searchQuery, genderFilter);
+      fetchStudents(currentPage, searchQuery, genderFilter, sort);
       fetchStats();
     } catch {
       showToast("تعذر الاتصال بالخادم.", "error");
@@ -393,17 +396,32 @@ export default function StudentDashboard() {
                   : <><i className="fa-solid fa-download"></i><span>تصدير Excel</span></>
                 }
               </button>
-              <div className="filter-dropdown-wrapper">
-                <select
-                  className="filter-select"
-                  value={genderFilter}
-                  onChange={(e) => setGenderFilter(e.target.value)}
-                >
-                  <option value="all">كل الأجناس</option>
-                  <option value="ذكر">ذكور</option>
-                  <option value="أنثى">إناث</option>
-                </select>
-                <i className="fa-solid fa-filter filter-icon"></i>
+              <div className="table-actions">
+                <div className="filter-dropdown-wrapper">
+                  <select
+                    className="filter-select"
+                    value={genderFilter}
+                    onChange={(e) => setGenderFilter(e.target.value)}
+                  >
+                    <option value="all">كل الأجناس</option>
+                    <option value="ذكر">ذكور</option>
+                    <option value="أنثى">إناث</option>
+                  </select>
+                  <i className="fa-solid fa-filter filter-icon"></i>
+                </div>
+
+                <div className="filter-dropdown-wrapper">
+                  <select
+                    className="filter-select"
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                  >
+                    <option value="-code">الاحدث</option>
+                    <option value="code">الأقدم </option>
+
+                  </select>
+                  <i className="fa-solid fa-filter filter-icon"></i>
+                </div>
               </div>
             </div>
           </div>
@@ -490,37 +508,11 @@ export default function StudentDashboard() {
             <div className="showing-count">
               عرض {students.length} من أصل {totalCount} طالب
             </div>
-            {totalPages > 1 && (
-              <div className="pagination-wrapper">
-                <button
-                  className="page-btn"
-                  onClick={() => fetchStudents(currentPage - 1, searchQuery, genderFilter)}
-                  disabled={currentPage === 1}
-                >
-                  <i className="fa-solid fa-chevron-right"></i>
-                </button>
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      className={`page-btn ${currentPage === page ? "active" : ""}`}
-                      onClick={() => fetchStudents(page, searchQuery, genderFilter)}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-                {totalPages > 5 && <span className="page-btn dots">...</span>}
-                <button
-                  className="page-btn"
-                  onClick={() => fetchStudents(currentPage + 1, searchQuery, genderFilter)}
-                  disabled={currentPage === totalPages}
-                >
-                  <i className="fa-solid fa-chevron-left"></i>
-                </button>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => fetchStudents(page, searchQuery, genderFilter, sort)}
+            />
           </div>
         </section>
       </main>
