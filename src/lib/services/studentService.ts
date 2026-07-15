@@ -181,3 +181,82 @@ export async function getAllStudentsForExport(
     .sort("code")
     .lean();
 }
+
+
+// ---------------------------------------------------------------------------
+// Missing codes — codes that were once generated but whose students were
+// deleted. Uses the same algorithm as generateStudentCode() to reconstruct
+// every code from 1..seq, then diffs against existing codes.
+// ---------------------------------------------------------------------------
+
+// Pure function — mirrors generateStudentCode() exactly, no DB side effects.
+function codeFromPosition(n: number): string {
+  const CODES_PER = 9999;
+  const letterIndex = Math.floor((n - 1) / CODES_PER);
+  const number = ((n - 1) % CODES_PER) + 1;
+  const letter = String.fromCharCode(65 + letterIndex);
+  return `${letter}${String(number).padStart(4, "0")}`;
+}
+
+export async function getMissingCodes(): Promise<string[]> {
+  await connectDB();
+
+  // Read the counter — if it doesn't exist yet there are no missing codes
+  const counter = await Counter.findOne({ name: COUNTER_NAME }).lean();
+  if (!counter || counter.seq === 0) return [];
+
+  const seq = counter.seq;
+
+  // Build the complete set of codes that should exist (1 … seq)
+  const allExpected = new Set<string>();
+  for (let n = 1; n <= seq; n++) {
+    allExpected.add(codeFromPosition(n));
+  }
+
+  // Fetch every existing student code in one query
+  const existingDocs = await Student.find({}, { code: 1, _id: 0 }).lean();
+  const existingCodes = new Set(existingDocs.map((d) => d.code));
+
+  // Return codes that were generated but no longer have a student
+  const missing: string[] = [];
+  for (const code of allExpected) {
+    if (!existingCodes.has(code)) {
+      missing.push(code);
+    }
+  }
+
+  // Sort naturally: A0001, A0002 … A9999, B0001 …
+  missing.sort();
+  return missing;
+}
+
+
+export async function createStudentWithCode(
+  dto: CreateStudentDTO,
+  code: string
+): Promise<IStudent> {
+  await connectDB();
+
+  const existingPhone = await Student.findOne({
+    studentPhone: dto.studentPhone,
+  });
+
+  if (existingPhone) {
+    throw new Error("هذا الطالب مسجل مسبقاً.");
+  }
+
+  const existingCode = await Student.findOne({ code });
+
+  if (existingCode) {
+    throw new Error("هذا الكود مستخدم بالفعل.");
+  }
+
+  const student = new Student({
+    ...dto,
+    code,
+  });
+
+  await student.save();
+
+  return student;
+}

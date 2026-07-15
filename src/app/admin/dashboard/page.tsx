@@ -63,6 +63,7 @@ export default function StudentDashboard() {
       "مسار الهندسة و علوم الحاسب",
       "مسار الأعمال",
       "مسار الأدب و الفنون",
+      "ازهر"
     ],
     "تالتة ثانوي": ["علمي رياضة", "علمي علوم", "أدبي"],
   };
@@ -470,9 +471,9 @@ export default function StudentDashboard() {
                           <button className="action-btn btn-view" title="عرض" onClick={() => openViewModal(student)}>
                             <i className="fa-solid fa-eye"></i>
                           </button>
-                          <button className="action-btn btn-delete" title="حذف" onClick={() => handleDeleteStudent(student)}>
+                          {/* <button className="action-btn btn-delete" title="حذف" onClick={() => handleDeleteStudent(student)}>
                             <i className="fa-solid fa-trash-can"></i>
-                          </button>
+                          </button> */}
                           <button
                             type="button"
                             className="action-btn"

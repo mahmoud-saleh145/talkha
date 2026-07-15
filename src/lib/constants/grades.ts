@@ -26,6 +26,7 @@ export const SECONDARY_2_TRACKS = [
     "مسار الهندسة و علوم الحاسب",
     "مسار الأعمال",
     "مسار الأدب و الفنون",
+    "ازهر"
 ] as const;
 
 export const SECONDARY_3_TRACKS = [
