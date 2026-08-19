@@ -1,6 +1,6 @@
 // src/app/api/admin/schedules/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { requireAdminOnly } from "@/lib/middleware/auth";
 import { saveScheduleRecord, getAllSchedules } from "@/lib/services/scheduleService";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 import { ALL_GRADES, Grade } from '@/lib/constants/grades';
@@ -8,7 +8,7 @@ import { ALL_GRADES, Grade } from '@/lib/constants/grades';
 const VALID_GRADES = new Set<string>(ALL_GRADES);
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {

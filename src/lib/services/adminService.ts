@@ -1,12 +1,12 @@
 import { connectDB } from "@/lib/db/mongoose";
-import Admin, { IAdmin } from "@/lib/models/Admin";
+import Admin, { IAdmin, AdminRole } from "@/lib/models/Admin";
 import { signToken } from "@/lib/utils/jwt";
 
 export interface CreateAdminDTO {
   name: string;
   email: string;
   password: string;
-  role: "مدير عام" | "أدمن" | "مشرف";
+  role: AdminRole;
 }
 
 export async function loginAdmin(
@@ -72,7 +72,6 @@ export async function updateAdmin(
 ) {
   await connectDB();
 
-  // Check for email conflicts
   if (dto.email) {
     const conflict = await Admin.findOne({
       email: dto.email.toLowerCase().trim(),
@@ -104,15 +103,16 @@ export async function deleteAdmin(id: string, requesterId: string) {
   return admin;
 }
 
+// Seeds the first admin if the collection is empty
 export async function seedInitialAdmin() {
   await connectDB();
   const count = await Admin.countDocuments();
   if (count === 0) {
     await Admin.create({
       name: "أحمد المنصور",
-      email: "ahmed@Talkha.com",
+      email: "ahmed@2total.com",
       password: "admin123",
-      role: "مدير عام",
+      role: "أدمن",
       status: "نشط",
     });
     console.log("✅ Initial admin seeded");

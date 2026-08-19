@@ -36,6 +36,7 @@ interface StudentsResponse {
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const [whatsappStudent, setWhatsappStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, males: 0, females: 0, todayCount: 0 });
   const [adminUser, setAdminUser] = useState({ name: "", role: "" });
@@ -265,6 +266,18 @@ export default function StudentDashboard() {
     setShowViewModal(true);
   };
 
+  const openWhatsApp = (phone: string) => {
+    const formattedPhone = phone.replace(/^0/, "20");
+
+    window.open(
+      `https://wa.me/${formattedPhone}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    setWhatsappStudent(null);
+  };
+
   const malesPercent = stats.total > 0 ? Math.round((stats.males / stats.total) * 100) : 0;
   const femalesPercent = stats.total > 0 ? Math.round((stats.females / stats.total) * 100) : 0;
 
@@ -474,7 +487,7 @@ export default function StudentDashboard() {
                           {/* <button className="action-btn btn-delete" title="حذف" onClick={() => handleDeleteStudent(student)}>
                             <i className="fa-solid fa-trash-can"></i>
                           </button> */}
-                          <button
+                          {/* <button
                             type="button"
                             className="action-btn"
                             onClick={() => {
@@ -488,6 +501,15 @@ export default function StudentDashboard() {
                           >
                             <i className="fa-brands fa-whatsapp"></i>
                             <span style={{ fontSize: "8px" }}> </span>
+                          </button> */}
+                          <button
+                            type="button"
+                            className="action-btn"
+                            title="WhatsApp"
+                            onClick={() => setWhatsappStudent(student)}
+                            style={{ backgroundColor: "#25D366" }}
+                          >
+                            <i className="fa-brands fa-whatsapp"></i>
                           </button>
                         </div>
                       </td>
@@ -767,6 +789,133 @@ export default function StudentDashboard() {
             <button className="modal-close-full-btn" onClick={() => setShowViewModal(false)}>
               <i className="fa-solid fa-xmark"></i><span>إغلاق</span>
             </button>
+          </div>
+        </div>
+      )}
+      {whatsappStudent && (
+        <div
+          onClick={() => setWhatsappStudent(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.35)",
+            padding: "20px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "360px",
+              backgroundColor: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+              direction: "rtl",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "18px",
+                    fontWeight: 700,
+                  }}
+                >
+                  إرسال رسالة عبر WhatsApp
+                </h3>
+
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontSize: "13px",
+                    color: "#777",
+                  }}
+                >
+                  اختر الشخص الذي تريد مراسلته
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setWhatsappStudent(null)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "20px",
+                  color: "#777",
+                }}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => openWhatsApp(whatsappStudent.parentPhone)}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "13px 16px",
+                  backgroundColor: "#25D366",
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <i className="fa-solid fa-user"></i>
+                ولي الأمر
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openWhatsApp(whatsappStudent.studentPhone)}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "13px 16px",
+                  backgroundColor: "#128C7E",
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <i className="fa-solid fa-graduation-cap"></i>
+                الطالب
+              </button>
+            </div>
           </div>
         </div>
       )}

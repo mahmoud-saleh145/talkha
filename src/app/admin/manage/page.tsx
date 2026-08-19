@@ -96,14 +96,14 @@ export default function AdminManagement() {
   };
 
   const getRoleAvatarClass = (role: string) => {
-    if (role === "مدير عام") return "super";
-    if (role === "أدمن") return "admin";
+    if (role === "أدمن") return "super";
+    if (role === "مشرف") return "admin";
     return "mod";
   };
 
   const getRoleBadgeClass = (role: string) => {
-    if (role === "مدير عام") return "role-super";
-    if (role === "أدمن") return "role-admin";
+    if (role === "أدمن") return "role-super";
+    if (role === "مشرف") return "role-admin";
     return "role-mod";
   };
 
@@ -212,7 +212,7 @@ export default function AdminManagement() {
 
   const totalAdmins = admins.length;
   const activeAdmins = admins.filter((a) => a.status === "نشط").length;
-  const superAdmins = admins.filter((a) => a.role === "مدير عام").length;
+  const superAdmins = admins.filter((a) => a.role === "أدمن").length;
 
   return (
     <div className="dashboard-container">
@@ -316,7 +316,7 @@ export default function AdminManagement() {
               <span className="stat-sub">صلاحية كاملة</span>
             </div>
             <div className="stat-body">
-              <span className="stat-label">مديرون عامون</span>
+              <span className="stat-label">مديرون</span>
               <span className="stat-number">{superAdmins}</span>
             </div>
           </div>
@@ -341,7 +341,6 @@ export default function AdminManagement() {
               <div className="filter-dropdown-wrapper">
                 <select className="filter-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                   <option value="all">كل الصلاحيات</option>
-                  <option value="مدير عام">مدير عام</option>
                   <option value="أدمن">أدمن</option>
                   <option value="مشرف">مشرف</option>
                 </select>
@@ -464,7 +463,6 @@ export default function AdminManagement() {
                   <div className="modal-select-wrapper">
                     <select className="modal-select" required value={newRole} onChange={(e) => setNewRole(e.target.value)}>
                       <option value="" disabled>اختر الصلاحية</option>
-                      <option value="مدير عام">مدير عام</option>
                       <option value="أدمن">أدمن</option>
                       <option value="مشرف">مشرف</option>
                     </select>
@@ -537,7 +535,6 @@ export default function AdminManagement() {
                   <label className="modal-label">الصلاحية</label>
                   <div className="modal-select-wrapper">
                     <select className="modal-select" value={editingAdmin.role} onChange={(e) => setEditingAdmin({ ...editingAdmin, role: e.target.value })}>
-                      <option value="مدير عام">مدير عام</option>
                       <option value="أدمن">أدمن</option>
                       <option value="مشرف">مشرف</option>
                     </select>

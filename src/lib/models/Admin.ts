@@ -1,11 +1,17 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
+// Two roles only:
+// "أدمن"   — full access (merges previous "مدير عام" + "أدمن")
+// "مشرف"   — supervisor: search + add student only
+
+export type AdminRole = "أدمن" | "مشرف";
+
 export interface IAdmin extends Document {
   name: string;
   email: string;
   password: string;
-  role: "مدير عام" | "أدمن" | "مشرف";
+  role: AdminRole;
   status: "نشط" | "غير نشط";
   createdAt: Date;
   updatedAt: Date;
@@ -26,8 +32,8 @@ const adminSchema = new Schema<IAdmin>(
     role: {
       type: String,
       required: true,
-      enum: ["مدير عام", "أدمن", "مشرف"],
-      default: "أدمن",
+      enum: ["أدمن", "مشرف"],
+      default: "مشرف",
     },
     status: {
       type: String,
@@ -38,7 +44,6 @@ const adminSchema = new Schema<IAdmin>(
   { timestamps: true }
 );
 
-// Hash password before save
 adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -51,13 +56,13 @@ adminSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidate, this.password);
 };
 
-// Remove password from JSON output
-// Omit password from serialization via virtuals instead of toJSON transform
-adminSchema.methods.toSafeObject = function () {
-  const obj = this.toObject() as Record<string, unknown>;
-  delete obj.password;
-  return obj;
-};
+adminSchema.set("toJSON", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transform: (_doc: any, ret: any) => {
+    delete ret.password;
+    return ret;
+  },
+});
 
 const Admin: Model<IAdmin> =
   mongoose.models.Admin ?? mongoose.model<IAdmin>("Admin", adminSchema);

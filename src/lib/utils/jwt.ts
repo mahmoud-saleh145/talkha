@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { AdminRole } from "@/lib/models/Admin";
 
 const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET ?? "fallback-dev-secret-change-in-production"
@@ -9,10 +10,10 @@ const SECRET = new TextEncoder().encode(
 // Admin JWT
 // ---------------------------------------------------------------------------
 export interface JWTPayload {
-  sub: string; // admin id
+  sub: string;
   name: string;
   email: string;
-  role: string;
+  role: AdminRole;
 }
 
 export async function signToken(payload: JWTPayload): Promise<string> {
@@ -43,9 +44,9 @@ export async function getAuthAdmin(): Promise<JWTPayload | null> {
 // Student JWT
 // ---------------------------------------------------------------------------
 export interface StudentJWTPayload {
-  sub: string;   // student _id
+  sub: string;
   name: string;
-  phone: string; // studentPhone
+  phone: string;
   type: "student";
 }
 
@@ -55,7 +56,7 @@ export async function signStudentToken(
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("60d")
+    .setExpirationTime("30d")
     .sign(SECRET);
 }
 

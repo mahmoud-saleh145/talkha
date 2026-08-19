@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { requireAdminOnly } from "@/lib/middleware/auth";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 import { deleteSchedule } from "@/lib/services/scheduleService";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function DELETE(req: NextRequest, { params }: Params) {
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {

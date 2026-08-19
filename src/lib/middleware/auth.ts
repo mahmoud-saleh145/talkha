@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, JWTPayload, verifyStudentToken, StudentJWTPayload } from "@/lib/utils/jwt";
 
 // ---------------------------------------------------------------------------
-// Admin guard
+// Admin guard — any logged-in admin (أدمن OR مشرف)
 // ---------------------------------------------------------------------------
 export async function requireAdmin(
   req: NextRequest
@@ -26,8 +26,30 @@ export async function requireAdmin(
     );
   }
 
-
   return payload;
+}
+
+// ---------------------------------------------------------------------------
+// Admin-only guard — only role "أدمن" passes (supervisors get 403)
+// ---------------------------------------------------------------------------
+export async function requireAdminOnly(
+  req: NextRequest
+): Promise<JWTPayload | NextResponse> {
+  const authResult = await requireAdmin(req);
+
+
+  // If requireAdmin already returned an error response, forward it
+  if (authResult instanceof NextResponse) return authResult;
+
+  if (authResult.role !== "أدمن") {
+    return NextResponse.json(
+      { success: false, message: "هذه الصفحة للأدمن فقط. ليس لديك صلاحية الوصول." },
+      { status: 403 }
+    );
+  }
+
+
+  return authResult;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { requireAdminOnly } from "@/lib/middleware/auth";
 import { updateStudent, deleteStudent } from "@/lib/services/studentService";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 import { connectDB } from "@/lib/db/mongoose";
@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(req: NextRequest, { params }: Params) {
   await connectDB();
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
 export async function DELETE(req: NextRequest, { params }: Params) {
   await connectDB();
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {

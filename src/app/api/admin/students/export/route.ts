@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { requireAdminOnly } from "@/lib/middleware/auth";
 import { getAllStudentsForExport } from "@/lib/services/studentService";
 import * as XLSX from "xlsx-js-style";
 import { connectDB } from "@/lib/db/mongoose";
@@ -21,7 +21,7 @@ const gradeMap: Record<string, string> = {
 const formatGrade = (grade: string) => gradeMap[grade] ?? grade;
 export async function GET(req: NextRequest) {
   await connectDB();
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
         ? gender
         : undefined
     );
-    console.log(students);
+
 
     const rows = students.map((s) => ({
       "الفرع": s.branch,
