@@ -23,6 +23,7 @@ interface Student {
 export default function SupervisorPage() {
   const router = useRouter();
   const [supervisorUser, setSupervisorUser] = useState({ name: "", role: "" });
+  const [whatsappStudent, setWhatsappStudent] = useState<Student | null>(null);
 
   // Search
   const [query, setQuery] = useState("");
@@ -109,6 +110,19 @@ export default function SupervisorPage() {
     await fetch("/api/auth/logout", { method: "POST" });
     sessionStorage.removeItem("loggedAdmin");
     setTimeout(() => router.push("/admin"), 800);
+  }
+
+
+  const openWhatsApp = (phone: string) => {
+    const formattedPhone = phone.replace(/^0/, "20");
+
+    window.open(
+      `https://wa.me/${formattedPhone}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    setWhatsappStudent(null);
   };
 
   return (
@@ -238,13 +252,25 @@ export default function SupervisorPage() {
                       <td style={{ direction: "ltr" }}>{s.studentPhone}</td>
                       <td style={{ direction: "ltr" }}>{s.parentPhone}</td>
                       <td>
-                        <button
-                          className="action-btn btn-view"
-                          title="عرض"
-                          onClick={() => setViewingStudent(s)}
-                        >
-                          <i className="fa-solid fa-eye"></i>
-                        </button>
+                        <div className="action-buttons">
+
+                          <button
+                            className="action-btn btn-view"
+                            title="عرض"
+                            onClick={() => setViewingStudent(s)}
+                          >
+                            <i className="fa-solid fa-eye"></i>
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn"
+                            title="WhatsApp"
+                            onClick={() => setWhatsappStudent(s)}
+                            style={{ backgroundColor: "#25D366" }}
+                          >
+                            <i className="fa-brands fa-whatsapp"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -347,6 +373,133 @@ export default function SupervisorPage() {
             <button className="modal-close-full-btn" onClick={() => setViewingStudent(null)}>
               <i className="fa-solid fa-xmark"></i><span>إغلاق</span>
             </button>
+          </div>
+        </div>
+      )}
+      {whatsappStudent && (
+        <div
+          onClick={() => setWhatsappStudent(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.35)",
+            padding: "20px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "360px",
+              backgroundColor: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+              direction: "rtl",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "18px",
+                    fontWeight: 700,
+                  }}
+                >
+                  إرسال رسالة عبر WhatsApp
+                </h3>
+
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontSize: "13px",
+                    color: "#777",
+                  }}
+                >
+                  اختر الشخص الذي تريد مراسلته
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setWhatsappStudent(null)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "20px",
+                  color: "#777",
+                }}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => openWhatsApp(whatsappStudent.parentPhone)}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "13px 16px",
+                  backgroundColor: "#25D366",
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <i className="fa-solid fa-user"></i>
+                ولي الأمر
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openWhatsApp(whatsappStudent.studentPhone)}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "13px 16px",
+                  backgroundColor: "#128C7E",
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <i className="fa-solid fa-graduation-cap"></i>
+                الطالب
+              </button>
+            </div>
           </div>
         </div>
       )}
