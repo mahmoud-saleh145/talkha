@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import Student, { IStudent } from "@/lib/models/Student";
 
 import Counter from "@/lib/models/Counter";
+import ReleasedCode from "../models/ReleasedCode";
 import { Grade, Branch } from "../constants/grades";
 
 // ---------------------------------------------------------------------------
@@ -21,10 +22,24 @@ import { Grade, Branch } from "../constants/grades";
 //
 // Atomicity: findOneAndUpdate with $inc is a single MongoDB operation,
 // so concurrent requests always receive different values.
+//
+// Gap recycling — two layers, both automatic:
+//   1. deleteStudent() pushes the freed code into the ReleasedCode pool.
+//   2. When the pool runs dry, createStudent() re-scans for any missing
+//      code (including old gaps and rows deleted directly in the database)
+//      and refills the pool. That scan is throttled by SCAN_MIN_INTERVAL_MS
+//      because it reads every student code.
 // ---------------------------------------------------------------------------
 
 const COUNTER_NAME = "student_global";
 const CODES_PER_LETTER = 9999;
+const MAX_RECYCLE_ATTEMPTS = 5;
+
+// Throttle marker for the gap scan — stored in the Counter collection,
+// where `seq` holds the epoch-ms timestamp of the last scan.
+const SCAN_MARKER = "released_pool_scan";
+const SCAN_MIN_INTERVAL_MS = 1000 * 60 * 60 * 6; // at most one scan per 6h
+const MAX_BACKFILL_INSERT = 5000; // lowest N gaps per scan, keeps inserts small
 
 async function generateStudentCode(): Promise<{ code: string; seq: number }> {
   const counter = await Counter.findOneAndUpdate(
@@ -41,6 +56,110 @@ async function generateStudentCode(): Promise<{ code: string; seq: number }> {
   const paddedNumber = String(number).padStart(4, "0");
 
   return { code: `${letter}${paddedNumber}`, seq: n };
+}
+
+// ---------------------------------------------------------------------------
+// Released-code pool helpers
+// ---------------------------------------------------------------------------
+
+/** True when the error is an E11000 duplicate-key error on the given field. */
+function isDuplicateKeyOn(err: unknown, field: string): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const e = err as { code?: number; keyPattern?: Record<string, unknown> };
+  return e.code === 11000 && !!e.keyPattern && field in e.keyPattern;
+}
+
+/**
+ * Atomically removes and returns the lowest available released code.
+ * findOneAndDelete is a single MongoDB operation, so two concurrent
+ * registrations can never receive the same code.
+ */
+async function takeReleasedCode(): Promise<string | null> {
+  const doc = await ReleasedCode.findOneAndDelete(
+    {},
+    { sort: { code: 1 } }
+  ).lean();
+
+  return doc?.code ?? null;
+}
+
+/** Returns a code to the pool (on delete, or when a reuse attempt fails). */
+async function releaseCode(code: string): Promise<void> {
+  try {
+    await ReleasedCode.updateOne(
+      { code },
+      { $setOnInsert: { code, releasedAt: new Date() } },
+      { upsert: true }
+    );
+  } catch (err) {
+    // Already in the pool — nothing to do
+    if (!isDuplicateKeyOn(err, "code")) throw err;
+  }
+}
+
+/**
+ * Drains the pool, lowest code first, and creates the student with it.
+ * Returns null when the pool is empty. The unique index on Student.code is
+ * the final arbiter — a stale pool entry is discarded and the next tried.
+ */
+async function tryCreateWithReleasedCode(
+  dto: CreateStudentDTO
+): Promise<IStudent | null> {
+  for (let attempt = 0; attempt < MAX_RECYCLE_ATTEMPTS; attempt++) {
+    const recycled = await takeReleasedCode();
+    if (!recycled) return null;
+
+    try {
+      const student = new Student({ ...dto, code: recycled });
+      await student.save();
+      return student;
+    } catch (err) {
+      // Code was actually taken — discard the stale entry, try the next one
+      if (isDuplicateKeyOn(err, "code")) continue;
+
+      // Any other failure: put the code back so it isn't lost
+      await releaseCode(recycled);
+      throw err;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Claims and runs a gap scan, at most once per SCAN_MIN_INTERVAL_MS across
+ * all serverless instances. Returns true when new codes entered the pool.
+ */
+async function scanForMissingCodes(): Promise<boolean> {
+  const now = Date.now();
+  const threshold = now - SCAN_MIN_INTERVAL_MS;
+
+  // Atomically claim the scan — only one instance wins
+  const claimed = await Counter.findOneAndUpdate(
+    { name: SCAN_MARKER, seq: { $lt: threshold } },
+    { $set: { seq: now } },
+    { new: true }
+  );
+
+  if (!claimed) {
+    // Marker missing entirely → this is the very first scan
+    try {
+      await Counter.create({ name: SCAN_MARKER, seq: now });
+    } catch (err) {
+      // Marker exists and was scanned recently, or another instance won
+      if (isDuplicateKeyOn(err, "name")) return false;
+      throw err;
+    }
+  }
+
+  try {
+    const { inserted } = await backfillReleasedCodes();
+    return inserted > 0;
+  } catch (err) {
+    // Let the next registration retry instead of waiting out the interval
+    await Counter.updateOne({ name: SCAN_MARKER }, { $set: { seq: 0 } });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +208,18 @@ export async function createStudent(dto: CreateStudentDTO): Promise<IStudent> {
     throw new Error("هذا الطالب مسجل مسبقاً في النظام.");
   }
 
+  // 1) Reuse the lowest gap code already known to the pool
+  const recycled = await tryCreateWithReleasedCode(dto);
+  if (recycled) return recycled;
+
+  // 2) Pool empty → look for gaps anywhere in the database (throttled),
+  //    then retry once. Covers old deletions and manual DB deletes.
+  if (await scanForMissingCodes()) {
+    const refilled = await tryCreateWithReleasedCode(dto);
+    if (refilled) return refilled;
+  }
+
+  // 3) No gaps at all — existing counter logic, unchanged
   const { code, seq } = await generateStudentCode();
 
   try {
@@ -196,6 +327,10 @@ export async function deleteStudent(id: string) {
   await connectDB();
   const student = await Student.findByIdAndDelete(id);
   if (!student) throw new Error("الطالب غير موجود.");
+
+  // Return the freed code to the pool so the next registration reuses it
+  await releaseCode(student.code);
+
   return student;
 }
 
@@ -275,6 +410,42 @@ export async function getMissingCodes(): Promise<string[]> {
   return missing;
 }
 
+/**
+ * Idempotent: seeds the ReleasedCode pool with the lowest unused codes found
+ * anywhere in the database. Called automatically by createStudent() when the
+ * pool runs dry, and manually via POST /api/admin/students/missing-codes.
+ */
+export async function backfillReleasedCodes(): Promise<{
+  found: number;
+  inserted: number;
+}> {
+  await connectDB();
+
+  const missing = await getMissingCodes();
+  if (missing.length === 0) return { found: 0, inserted: 0 };
+
+  // The pool is small in practice — read it whole rather than a huge $in
+  const pooledDocs = await ReleasedCode.find({}, { code: 1, _id: 0 }).lean();
+  const pooled = new Set(pooledDocs.map((d) => d.code));
+
+  // missing is sorted ascending, so slicing takes the LOWEST gaps first
+  const toInsert = missing
+    .filter((code) => !pooled.has(code))
+    .slice(0, MAX_BACKFILL_INSERT)
+    .map((code) => ({ code, releasedAt: new Date() }));
+
+  if (toInsert.length === 0) return { found: missing.length, inserted: 0 };
+
+  try {
+    await ReleasedCode.insertMany(toInsert, { ordered: false });
+  } catch (err) {
+    // ordered:false still writes the non-colliding documents
+    if (!isDuplicateKeyOn(err, "code")) throw err;
+  }
+
+  return { found: missing.length, inserted: toInsert.length };
+}
+
 
 export async function createStudentWithCode(
   dto: CreateStudentDTO,
@@ -302,6 +473,9 @@ export async function createStudentWithCode(
   });
 
   await student.save();
+
+  // If an admin manually claimed a gap code, drop it from the pool
+  await ReleasedCode.deleteOne({ code });
 
   return student;
 }
