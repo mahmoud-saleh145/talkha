@@ -4,16 +4,38 @@ import { validateStudentInput } from "@/lib/utils/validation";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 import { Branch, Grade } from "@/lib/constants/grades";
 import { checkRateLimit, clientIp } from "@/lib/utils/rateLimit";
+import { verifyToken } from "@/lib/utils/jwt";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = clientIp(req);
+    const token = req.cookies.get("admin_token")?.value;
+
+    let isAdmin = false;
+
+    if (token) {
+      try {
+        const payload = await verifyToken(token);
+        console.log(payload);
+
+
+        if (payload?.role === "أدمن" || payload?.role === "مشرف") {
+          isAdmin = true;
+        }
+
+      } catch {
+        // Token غير صالح → يعامل كـ guest
+        isAdmin = false;
+      }
+    }
 
     // 5 registrations per IP per 10 minutes
-    // const allowed = await checkRateLimit("register", ip, 5, 600);
-    // if (!allowed) {
-    //   return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
-    // }
+    if (!isAdmin) {
+      const allowed = await checkRateLimit("register", ip, 10, 600);
+      if (!allowed) {
+        return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+      }
+    }
 
     if (ip === "156.197.219.113") {
       return apiError("blocked")
