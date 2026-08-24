@@ -10,10 +10,10 @@ export async function POST(req: NextRequest) {
     const ip = clientIp(req);
 
     // 5 registrations per IP per 10 minutes
-    const allowed = await checkRateLimit("register", ip, 5, 600);
-    if (!allowed) {
-      return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
-    }
+    // const allowed = await checkRateLimit("register", ip, 5, 600);
+    // if (!allowed) {
+    //   return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+    // }
 
     const body = await req.json();
     const userAgent = req.headers.get("user-agent") ?? "";
