@@ -9,6 +9,7 @@ import { getOrCreateDeviceId, setDeviceCookie } from "@/lib/utils/deviceId";
 import {
   claimDailyDeviceSlot,
   releaseDailyDeviceSlot,
+  DAILY_DEVICE_REGISTRATION_LIMIT,
 } from "@/lib/services/deviceLimitService";
 
 export async function POST(req: NextRequest) {
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
       if (!slotClaimed) {
         return withDevice(
           apiError(
-            "تم التسجيل من هذا الجهاز اليوم بالفعل. يمكنك التسجيل مرة أخرى غداً أو التواصل مع الإدارة.",
+            `لا يمكن تسجيل أكثر من ${DAILY_DEVICE_REGISTRATION_LIMIT} طلاب من نفس الجهاز في اليوم الواحد. يمكنك المحاولة غداً أو التواصل مع الإدارة.`,
             429
           )
         );

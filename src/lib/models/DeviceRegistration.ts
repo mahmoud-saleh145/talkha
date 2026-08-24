@@ -3,6 +3,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 export interface IDeviceRegistration extends Document {
     deviceId: string;
     day: string; // YYYY-MM-DD in Africa/Cairo
+    count: number;
     expiresAt: Date;
     createdAt: Date;
     updatedAt: Date;
@@ -12,6 +13,7 @@ const deviceRegistrationSchema = new Schema<IDeviceRegistration>(
     {
         deviceId: { type: String, required: true, trim: true },
         day: { type: String, required: true, trim: true },
+        count: { type: Number, required: true, default: 0 },
         expiresAt: { type: Date, required: true },
     },
     { timestamps: true }
