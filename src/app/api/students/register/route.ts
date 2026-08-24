@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
     //   return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
     // }
 
+    if (ip === "156.197.219.113") {
+      return apiError("blocked")
+    }
     const body = await req.json();
     const userAgent = req.headers.get("user-agent") ?? "";
 
