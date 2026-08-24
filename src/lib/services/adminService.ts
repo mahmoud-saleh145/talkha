@@ -106,12 +106,17 @@ export async function deleteAdmin(id: string, requesterId: string) {
 // Seeds the first admin if the collection is empty
 export async function seedInitialAdmin() {
   await connectDB();
+
+  const email = process.env.ADMIN_SEED_EMAIL;
+  const password = process.env.ADMIN_SEED_PASSWORD;
+  if (!email || !password) return;
+
   const count = await Admin.countDocuments();
   if (count === 0) {
     await Admin.create({
-      name: "أحمد المنصور",
-      email: "ahmed@2total.com",
-      password: "admin123",
+      name: process.env.ADMIN_SEED_NAME ?? "Administrator",
+      email,
+      password,
       role: "أدمن",
       status: "نشط",
     });

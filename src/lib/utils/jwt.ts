@@ -2,9 +2,15 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { AdminRole } from "@/lib/models/Admin";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "fallback-dev-secret-change-in-production"
-);
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error(
+    "JWT_SECRET is missing or too short (min 32 chars). Set it in your environment variables."
+  );
+}
+
+const SECRET = new TextEncoder().encode(JWT_SECRET);
 
 // ---------------------------------------------------------------------------
 // Admin JWT

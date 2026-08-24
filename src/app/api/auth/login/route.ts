@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loginAdmin, seedInitialAdmin } from "@/lib/services/adminService";
+import { loginAdmin } from "@/lib/services/adminService";
 import { apiError } from "@/lib/utils/response";
 import { connectDB } from "@/lib/db/mongoose";
+import { checkRateLimit, clientIp } from "@/lib/utils/rateLimit";
 
 export async function POST(req: NextRequest) {
   await connectDB();
   try {
-    await seedInitialAdmin();
+    const ip = clientIp(req);
+
+    // 10 admin login attempts per IP per 10 minutes
+    const allowed = await checkRateLimit("admin-login", ip, 10, 600);
+    if (!allowed) {
+      return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+    }
 
     const body = await req.json();
     const { email, password } = body;

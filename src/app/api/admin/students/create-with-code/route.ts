@@ -1,12 +1,13 @@
 import { Branch, Grade } from "@/lib/constants/grades";
+import { requireAdmin } from "@/lib/middleware/auth";
 import { createStudentWithCode } from "@/lib/services/studentService";
 import { apiError, apiSuccess } from "@/lib/utils/response";
 import { validateStudentInput } from "@/lib/utils/validation";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-    // const auth = await requireAdmin(req);
-    // if (auth instanceof NextResponse) return auth;
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
 
     const body = await req.json();
     const ip =

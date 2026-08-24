@@ -11,8 +11,11 @@ const VALID_BRANCHES = new Set<string>(ALL_BRANCHES);
 export function validateStudentInput(body: Record<string, unknown>) {
   const errors: string[] = [];
 
-  if (!body.name || !QUADRUPLE_NAME.test(String(body.name).trim())) {
+  const nameValue = String(body.name ?? "").trim();
+  if (!body.name || !QUADRUPLE_NAME.test(nameValue)) {
     errors.push("يرجى إدخال الاسم رباعياً على الأقل (4 كلمات).");
+  } else if (nameValue.length > 100) {
+    errors.push("اسم الطالب طويل جداً.");
   }
   if (!body.gender || !["ذكر", "أنثى"].includes(String(body.gender))) {
     errors.push("الجنس غير صحيح.");
@@ -23,11 +26,18 @@ export function validateStudentInput(body: Record<string, unknown>) {
   if (!body.parentPhone || !EG_PHONE.test(String(body.parentPhone).trim())) {
     errors.push("رقم هاتف ولي الأمر غير صحيح.");
   }
-  if (!body.school || String(body.school).trim().length < 2) {
+  const schoolValue = String(body.school ?? "").trim();
+  if (!body.school || schoolValue.length < 2) {
     errors.push("اسم المدرسة مطلوب.");
+  } else if (schoolValue.length > 100) {
+    errors.push("اسم المدرسة طويل جداً.");
   }
-  if (!body.parentJob || String(body.parentJob).trim().length < 2) {
+
+  const jobValue = String(body.parentJob ?? "").trim();
+  if (!body.parentJob || jobValue.length < 2) {
     errors.push("وظيفة ولي الأمر مطلوبة.");
+  } else if (jobValue.length > 100) {
+    errors.push("وظيفة ولي الأمر طويلة جداً.");
   }
 
   const grade = String(body.grade ?? "").trim();

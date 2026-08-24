@@ -3,18 +3,27 @@ import { connectDB } from "@/lib/db/mongoose";
 import Student from "@/lib/models/Student";
 import { signStudentToken } from "@/lib/utils/jwt";
 import { apiError } from "@/lib/utils/response";
+import { checkRateLimit, clientIp } from "@/lib/utils/rateLimit";
 
 const EG_PHONE = /^01[0125]\d{8}$/;
 const QUADRUPLE_NAME = /^\S+(\s+\S+){3,}/;
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = clientIp(req);
+
+    // 10 login attempts per IP per 10 minutes
+    const allowed = await checkRateLimit("student-login", ip, 10, 600);
+    if (!allowed) {
+      return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+    }
+
     const body = await req.json();
     const name = String(body.name ?? "").trim();
     const phone = String(body.phone ?? "").trim();
 
     // Basic validation
-    if (!name || !QUADRUPLE_NAME.test(name)) {
+    if (!name || name.length > 100 || !QUADRUPLE_NAME.test(name)) {
       return apiError("يرجى إدخال الاسم رباعياً على الأقل (4 كلمات).", 422);
     }
     if (!phone || !EG_PHONE.test(phone)) {
@@ -23,9 +32,11 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Look up student by name AND phone — both must match
+    // Exact match — no dynamic RegExp. Arabic has no letter case, so the
+    // previous case-insensitive regex added nothing but a full collection scan
+    // and let user input build the pattern.
     const student = await Student.findOne({
-      name: { $regex: new RegExp(`^${name}$`, "i") },
+      name: name,
       studentPhone: phone,
     }).lean();
 
@@ -66,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (err) {
-    const message = err instanceof Error ? err.message : "خطأ في تسجيل الدخول.";
-    return apiError(message, 500);
+    console.error("student login error:", err);
+    return apiError("خطأ في تسجيل الدخول.", 500);
   }
 }

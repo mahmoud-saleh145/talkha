@@ -65,12 +65,15 @@ export default function SupervisorPage() {
 
   useEffect(() => {
     const logged = sessionStorage.getItem("loggedAdmin");
-    if (!logged) { router.push("/admin"); return; }
-    const parsed = JSON.parse(logged);
-    // Admins should not be on this page
-    if (parsed.role === "أدمن") { router.push("/admin/manage"); return; }
-    setSupervisorUser(parsed);
-  }, [router]);
+
+    if (!logged) return;
+
+    try {
+      setSupervisorUser(JSON.parse(logged));
+    } catch {
+      sessionStorage.removeItem("loggedAdmin");
+    }
+  }, []);
 
   const doSearch = async (q: string) => {
     if (!q.trim()) {

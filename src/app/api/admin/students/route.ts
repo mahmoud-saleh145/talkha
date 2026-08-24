@@ -17,7 +17,13 @@ export async function GET(req: NextRequest) {
       page: Number(searchParams.get("page") ?? 1),
       limit: Number(searchParams.get("limit") ?? 20),
       sort: searchParams.get("sort") ?? "-createdAt",
+      ip: searchParams.get("ip") ?? "",
+      school: searchParams.get("school") ?? "",
+      from: searchParams.get("from") ?? "",
+      to: searchParams.get("to") ?? "",
+      userAgent: searchParams.get("userAgent") ?? "",
     });
+
     return apiSuccess(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "خطأ في جلب الطلاب.";

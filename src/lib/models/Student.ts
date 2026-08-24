@@ -48,6 +48,7 @@ const studentSchema = new Schema<IStudent>(
       required: true,
       trim: true,
       minlength: 7, // at least 4 Arabic words
+      maxlength: 100,
     },
     gender: {
       type: String,
@@ -88,11 +89,13 @@ const studentSchema = new Schema<IStudent>(
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     parentJob: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     createdBy: {
       type: String,

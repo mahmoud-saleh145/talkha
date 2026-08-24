@@ -26,7 +26,7 @@ import { Grade, Branch } from "../constants/grades";
 const COUNTER_NAME = "student_global";
 const CODES_PER_LETTER = 9999;
 
-async function generateStudentCode(): Promise<string> {
+async function generateStudentCode(): Promise<{ code: string; seq: number }> {
   const counter = await Counter.findOneAndUpdate(
     { name: COUNTER_NAME },
     { $inc: { seq: 1 } },
@@ -40,7 +40,7 @@ async function generateStudentCode(): Promise<string> {
   const letter = String.fromCharCode(65 + letterIndex); // 65 = 'A'
   const paddedNumber = String(number).padStart(4, "0");
 
-  return `${letter}${paddedNumber}`;
+  return { code: `${letter}${paddedNumber}`, seq: n };
 }
 
 // ---------------------------------------------------------------------------
@@ -67,6 +67,11 @@ export interface StudentFilters {
   page?: number;
   limit?: number;
   sort?: string;
+  ip?: string;
+  school?: string;
+  from?: string;
+  to?: string;
+  userAgent?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,10 +89,22 @@ export async function createStudent(dto: CreateStudentDTO): Promise<IStudent> {
     throw new Error("هذا الطالب مسجل مسبقاً في النظام.");
   }
 
-  const code = await generateStudentCode();
-  const student = new Student({ ...dto, code });
-  await student.save();
-  return student;
+  const { code, seq } = await generateStudentCode();
+
+  try {
+    const student = new Student({ ...dto, code });
+    await student.save();
+    return student;
+  } catch (err) {
+    // Roll the counter back so a failed save doesn't permanently burn a code.
+    // The { seq } filter makes this a no-op if another request already
+    // advanced the counter — so it stays safe under concurrency.
+    await Counter.updateOne(
+      { name: COUNTER_NAME, seq },
+      { $inc: { seq: -1 } }
+    );
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +119,12 @@ export async function getStudents(filters: StudentFilters) {
     page = 1,
     limit = 20,
     sort = "-code",
+    ip = "",
+    userAgent = "",
+    school = "",
+    from = "",
+    to = "",
+
   } = filters;
 
   const query: Record<string, unknown> = {};
@@ -119,7 +142,29 @@ export async function getStudents(filters: StudentFilters) {
   if (gender && ["ذكر", "أنثى"].includes(gender)) {
     query.gender = gender;
   }
+  if (ip) {
+    query.ip = ip.trim();
+  }
 
+  if (userAgent) {
+    query.userAgent = new RegExp(userAgent.trim(), "i");
+  }
+
+  if (school) {
+    query.school = new RegExp(school.trim(), "i");
+  }
+
+  if (from || to) {
+    query.createdAt = {};
+
+    if (from) {
+      (query.createdAt as Record<string, Date>).$gte = new Date(from);
+    }
+
+    if (to) {
+      (query.createdAt as Record<string, Date>).$lte = new Date(to);
+    }
+  }
   const skip = (page - 1) * limit;
   const [students, total] = await Promise.all([
     Student.find(query).sort(sort).skip(skip).limit(limit).lean(),

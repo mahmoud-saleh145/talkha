@@ -5,8 +5,8 @@ import { getMissingCodes } from "@/lib/services/studentService";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 
 export async function GET(req: NextRequest) {
-  // const auth = await requireAdmin(req);
-  // if (auth instanceof NextResponse) return auth;
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const missingCodes = await getMissingCodes();

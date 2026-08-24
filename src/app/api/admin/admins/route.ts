@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware/auth";
+import { requireAdminOnly } from "@/lib/middleware/auth";
 import { createAdmin, getAdmins } from "@/lib/services/adminService";
 import { validateAdminInput } from "@/lib/utils/validation";
 import { apiSuccess, apiError } from "@/lib/utils/response";
@@ -7,7 +7,7 @@ import { connectDB } from "@/lib/db/mongoose";
 
 export async function GET(req: NextRequest) {
   await connectDB();
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   await connectDB();
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminOnly(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       name: String(body.name).trim(),
       email: String(body.email).trim(),
       password: String(body.password),
-      role: body.role ?? "أدمن",
+      role: body.role === "أدمن" ? "أدمن" : "مشرف",
     });
 
     return apiSuccess(
