@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (ip === "156.197.219.113") {
+    if (ip === "156.197.217.180") {
       return withDevice(apiError("blocked"));
     }
 

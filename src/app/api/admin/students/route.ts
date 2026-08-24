@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       to: searchParams.get("to") ?? "",
       userAgent: searchParams.get("userAgent") ?? "",
     });
-    // console.log(result);
+    console.log(result);
 
     return apiSuccess(result);
   } catch (err) {
