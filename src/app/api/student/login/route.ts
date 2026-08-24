@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import Student from "@/lib/models/Student";
-import { signStudentToken } from "@/lib/utils/jwt";
+import { signStudentToken, verifyToken } from "@/lib/utils/jwt";
 import { apiError } from "@/lib/utils/response";
 import { checkRateLimit, clientIp } from "@/lib/utils/rateLimit";
 
@@ -11,11 +11,17 @@ const QUADRUPLE_NAME = /^\S+(\s+\S+){3,}/;
 export async function POST(req: NextRequest) {
   try {
     const ip = clientIp(req);
+    const adminToken = req.cookies.get("admin_token")?.value;
+    const adminPayload = adminToken ? await verifyToken(adminToken) : null;
+    console.log("adminToken", adminToken);
+    console.log("adminPayload", adminPayload);
 
-    // 10 login attempts per IP per 10 minutes
-    const allowed = await checkRateLimit("student-login", ip, 10, 600);
-    if (!allowed) {
-      return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+    if (!adminPayload) {
+      // 10 login attempts per IP per 10 minutes
+      const allowed = await checkRateLimit("student-login", ip, 10, 600);
+      if (!allowed) {
+        return apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429);
+      }
     }
 
     const body = await req.json();
@@ -47,6 +53,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (adminToken) {
+      if (adminPayload) {
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              name: student.name,
+              code: student.code,
+              grade: student.grade,
+            },
+          },
+          { status: 200 }
+        );
+      }
+    }
+
     // Sign student JWT
     const token = await signStudentToken({
       sub: String(student._id),
@@ -66,14 +88,16 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 }
     );
+    if (!adminPayload) {
 
-    res.cookies.set("student_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: "/",
-    });
+      res.cookies.set("student_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: "/",
+      });
+    }
 
     return res;
   } catch (err) {

@@ -1,12 +1,42 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken } from "@/lib/utils/jwt";
+import { verifyStudentToken, verifyToken } from "@/lib/utils/jwt";
+import { getOrCreateDeviceId, setDeviceCookie } from "@/lib/utils/deviceId";
 
 export async function proxy(req: NextRequest) {
-    const pathname = req.nextUrl.pathname;
-    const token = req.cookies.get("admin_token")?.value;
+    const res = await handleRequest(req);
 
-    if (pathname === "/admin") {
+    // Issue a persistent, signed device cookie to every visitor.
+    // Tied to the browser profile, so it survives IP changes.
+    const { issued } = await getOrCreateDeviceId(req);
+    if (issued) setDeviceCookie(res, issued);
+
+    return res;
+}
+
+async function handleRequest(req: NextRequest): Promise<NextResponse> {
+    const pathname = req.nextUrl.pathname;
+
+    // Non-admin routes: no auth logic here, only the device cookie above
+    if (!pathname.startsWith("/admin")) {
+        return NextResponse.next();
+    }
+
+    const token = req.cookies.get("admin_token")?.value;
+    const studentToken = req.cookies.get("student_token")?.value;
+
+    if (studentToken && !token && pathname === "/") {
+        const studentPayload = await verifyStudentToken(studentToken);
+
+        if (studentPayload) {
+            return NextResponse.redirect(
+                new URL("/student/account", req.url)
+            );
+        }
+
+    }
+
+    if (pathname === "/admin" && !token) {
         return NextResponse.next();
     }
     // No token
@@ -68,5 +98,10 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/admin/:path*"],
+    // Widened so the device cookie is issued on page loads (including the
+    // registration page). API routes are excluded — /api/students/register
+    // issues the cookie itself as a fallback.
+    matcher: [
+        "/((?!api|_next/static|_next/image|assets|favicon.ico).*)",
+    ],
 };
