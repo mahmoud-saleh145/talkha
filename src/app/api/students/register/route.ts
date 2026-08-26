@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // IP rate limiting — unchanged
     if (!isAdmin) {
-      const allowed = await checkRateLimit("register", ip, 10, 600);
+      const allowed = await checkRateLimit("register", ip, 10, 86400);
       if (!allowed) {
         return withDevice(
           apiError("عدد محاولات كبير جداً. يرجى المحاولة بعد قليل.", 429)

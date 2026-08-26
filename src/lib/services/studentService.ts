@@ -301,6 +301,7 @@ export async function getStudents(filters: StudentFilters) {
     Student.find(query).sort(sort).skip(skip).limit(limit).lean(),
     Student.countDocuments(query),
   ]);
+  console.log(students)
 
   return { students, total, page, limit, pages: Math.ceil(total / limit) };
 }
